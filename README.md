@@ -4,6 +4,7 @@ Môn học: Cơ sở Dữ liệu Phân tán
 Đề tài: Xây dựng Hệ thống Tìm kiếm Phân tán với Crawler Song song và So sánh Thuật toán Xếp hạng PageRank và HITS (Hiện thực hóa PageRank).
 
 II. Thông tin Thành viên
+
 Họ và Tên: Nguyễn Văn Vũ
 
 MSSV: N21DCCN095
