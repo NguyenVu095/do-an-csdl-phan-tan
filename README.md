@@ -5,8 +5,9 @@ Môn học: Cơ sở Dữ liệu Phân tán
 
 II. Thông tin Thành viên
 Họ và Tên: Nguyễn Văn Vũ
+
 MSSV: N21DCCN095
-Email: n21dccn095@student.ptithcm.edu.vn
+
 
 III. Tổng quan Đồ án
 Dự án này xây dựng một mô hình thu nhỏ (proof-of-concept) của một cỗ máy tìm kiếm phân tán. Hệ thống có khả năng thu thập dữ liệu web, tính toán điểm uy tín PageRank, và trả về kết quả tìm kiếm cho người dùng.
