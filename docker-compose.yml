@@ -1,0 +1,75 @@
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: 'rabbitmq'
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    build: ./elasticsearch
+    container_name: 'elasticsearch'
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ELASTIC_PASSWORD=elastic
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\\|yellow\"'"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.0
+    container_name: 'kibana'
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # -- Cụm Apache Spark --
+  spark-master:
+    build: ./spark
+    container_name: spark-master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    volumes:
+      - ./data:/opt/bitnami/spark/data
+      - ./pagerank_processor.py:/opt/bitnami/spark/pagerank_processor.py
+      # Mount script wrapper
+      - ./run_pagerank.sh:/opt/bitnami/spark/run_pagerank.sh
+    environment:
+      - SPARK_MODE=master
+
+  spark-worker:
+    build: ./spark
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+    volumes:
+      - ./data:/opt/bitnami/spark/data
+
+volumes:
+  rabbitmq_data:
+  elasticsearch_data:

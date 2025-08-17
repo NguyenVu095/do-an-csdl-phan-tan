@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Engine</title>
+    <!-- Tích hợp Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Thêm một chút hiệu ứng chuyển động cho đẹp mắt */
+        .result-item {
+            transition: transform 0.2s ease-in-out;
+        }
+        .result-item:hover {
+            transform: translateY(-5px);
+        }
+        /* Style cho spinner loading */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #3498db;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-3xl">
+
+        <!-- Tiêu đề -->
+        <div class="text-center my-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800">
+                <span class="text-blue-600">My</span><span class="text-gray-700">Search</span>
+            </h1>
+            <p class="text-gray-500 mt-2">Hệ thống tìm kiếm phân tán Mini</p>
+        </div>
+
+        <!-- Form tìm kiếm -->
+        <form id="searchForm" class="flex items-center bg-white rounded-full shadow-lg overflow-hidden mb-8">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Nhập từ khóa tìm kiếm..."
+                class="w-full py-4 px-6 text-gray-700 leading-tight focus:outline-none"
+                required
+            >
+            <button 
+                type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white p-4 transition-colors duration-300"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+        </form>
+
+        <!-- Khu vực hiển thị kết quả -->
+        <div id="resultsContainer" class="space-y-6">
+            <!-- Kết quả sẽ được chèn vào đây bằng JavaScript -->
+        </div>
+
+        <!-- Trạng thái loading và thông báo -->
+        <div id="status" class="text-center mt-10 text-gray-600">
+            <div id="loader" class="loader mx-auto hidden"></div>
+            <p id="message"></p>
+        </div>
+
+    </div>
+
+    <script>
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const statusDiv = document.getElementById('status');
+        const loader = document.getElementById('loader');
+        const messageP = document.getElementById('message');
+
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Ngăn form tải lại trang
+            
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            // Xóa kết quả cũ và hiển thị loading
+            resultsContainer.innerHTML = '';
+            messageP.textContent = '';
+            loader.classList.remove('hidden');
+
+            try {
+                // Gọi API backend (FastAPI)
+                const response = await fetch(`http://localhost:8000/search?q=${encodeURIComponent(query)}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `Lỗi HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Ẩn loading
+                loader.classList.add('hidden');
+                displayResults(data);
+
+            } catch (error) {
+                console.error('Lỗi khi tìm kiếm:', error);
+                loader.classList.add('hidden');
+                messageP.textContent = `Đã xảy ra lỗi: ${error.message}. Vui lòng đảm bảo API server đang chạy.`;
+            }
+        });
+
+        function displayResults(data) {
+            if (data.results && data.results.length > 0) {
+                messageP.textContent = `Tìm thấy ${data.total_hits} kết quả trong ${data.took_ms} ms.`;
+
+                data.results.forEach(item => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'result-item bg-white p-6 rounded-lg shadow-md border border-gray-200';
+                    
+                    // Sanitize HTML content before inserting
+                    const sanitizedTitle = item.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    const sanitizedSnippet = item.snippet.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+                    resultDiv.innerHTML = `
+                        <h3 class="text-xl font-semibold text-blue-700 hover:underline cursor-pointer">${sanitizedTitle}</h3>
+                        <p class="text-gray-600 mt-2">${sanitizedSnippet}</p>
+                        <p class="text-sm text-gray-400 mt-3">Score: ${item.score.toFixed(4)}</p>
+                    `;
+                    resultsContainer.appendChild(resultDiv);
+                });
+            } else {
+                messageP.textContent = 'Không tìm thấy kết quả nào phù hợp.';
+            }
+        }
+    </script>
+
+</body>
+</html>
