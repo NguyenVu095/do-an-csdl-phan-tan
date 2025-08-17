@@ -45,22 +45,7 @@ Phân tích HTML: BeautifulSoup4
 V. Kiến trúc Hệ thống
 Hệ thống bao gồm các thành phần chính được container hóa và giao tiếp với nhau qua RabbitMQ, bao gồm: Crawler Worker, cụm Apache Spark, Indexer Worker, Elasticsearch và Query Engine.
 
-VI. Cấu trúc Kho chứa
-search_engine/
-├── data/
-│   ├── links/
-│   └── pagerank_scores/
-├── elasticsearch/
-├── spark/
-├── crawler_worker.py
-├── docker-compose.yml
-├── index.html
-├── indexer_worker.py
-├── pagerank_processor.py
-├── query_engine.py
-├── README.md
-├── run_pagerank.sh
-└── seed.py
+
 
 VII. Hướng dẫn Cài đặt và Vận hành
 Yêu cầu
